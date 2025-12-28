@@ -63,3 +63,21 @@ def nll_logvar(y, gaussian_preds, moG=1):
         return log_prob
 
 
+def accuracy_classification(x, y, model, device="cpu", batch_size=128):
+    model.train()
+    dataset = TensorDataset(x, y)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for xb, yb in loader:
+            xb = xb.to(device)
+            yb = yb.to(device)
+
+            preds = model(xb)
+            pred_labels = preds.argmax(dim=-1)
+            true_labels = yb.argmax(dim=-1)
+
+            correct += (pred_labels == true_labels).sum().item()
+            total   += xb.size(0)
+    return correct / total

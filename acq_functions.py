@@ -4,10 +4,11 @@ import gc
 
 def max_entropy(T, model, x):
     with torch.no_grad():
-        x_rep = x.expand(T * x.shape[0], x.shape[1], x.shape[2], x.shape[3])
+        B = x.shape[0]
+        idx = torch.arange(B * T, device=x.device) % B
+        x_rep = x[idx]
         model.train()
         outputs = model(x_rep)
-        B = x.shape[0]
         outputs = outputs.view(T, B, 10)
         outputs = outputs.mean(dim=0)
         individual = outputs * torch.log(outputs + 1e-10)
@@ -17,10 +18,11 @@ def max_entropy(T, model, x):
 
 def bald(T, model, x):
     with torch.no_grad():
-        x_rep = x.expand(T * x.shape[0], x.shape[1], x.shape[2], x.shape[3])
+        B = x.shape[0]
+        idx = torch.arange(B * T, device=x.device) % B
+        x_rep = x[idx]
         model.train()
         outputs = model(x_rep)
-        B = x.shape[0]
         outputs_me = outputs.view(T, B, 10)
         outputs_me = outputs_me.mean(dim=0)
         individual = outputs_me * torch.log(outputs_me + 1e-10)
