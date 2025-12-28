@@ -4,7 +4,7 @@ import gc
 
 def max_entropy(T, model, x):
     with torch.no_grad():
-        x_rep = x.expand(T, x.shape[0], x.shape[1], x.shape[2], x.shape[3])
+        x_rep = x.expand(T * x.shape[0], x.shape[1], x.shape[2], x.shape[3])
         model.train()
         outputs = model(x_rep)
         B = x.shape[0]
@@ -17,7 +17,7 @@ def max_entropy(T, model, x):
 
 def bald(T, model, x):
     with torch.no_grad():
-        x_rep = x.expand(T, x.shape[0], x.shape[1], x.shape[2], x.shape[3])
+        x_rep = x.expand(T * x.shape[0], x.shape[1], x.shape[2], x.shape[3])
         model.train()
         outputs = model(x_rep)
         B = x.shape[0]
@@ -36,7 +36,7 @@ def bald(T, model, x):
 
 def var_ratios(T, model, x):
     with torch.no_grad():
-        x_rep = x.expand(T, x.shape[0], x.shape[1], x.shape[2], x.shape[3])
+        x_rep = x.expand(T * x.shape[0], x.shape[1], x.shape[2], x.shape[3])
         model.train()
         outputs = model(x_rep)
         outputs = outputs.view(T, x.shape[0], -1)
@@ -47,7 +47,7 @@ def var_ratios(T, model, x):
 
 def mean_std(T, model, x):
     with torch.no_grad():
-        x_rep = x.expand(T, x.shape[0], x.shape[1], x.shape[2], x.shape[3])
+        x_rep = x.expand(T * x.shape[0], x.shape[1], x.shape[2], x.shape[3])
         model.train()
         outputs = model(x_rep)
         outputs = outputs.view(T, x.shape[0], -1).transpose(0, 1)
