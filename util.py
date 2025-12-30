@@ -2,8 +2,9 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 def evaluate(x, y, loss_fn, model):
+  model.eval()
   y_pred = model(x)
-  loss = loss_fn(y, y_pred)
+  loss = loss_fn(y, y_pred).item()
   return loss
 
 def call_batchwise(fn, x, batch_size=4096, device=None):
@@ -15,23 +16,25 @@ def call_batchwise(fn, x, batch_size=4096, device=None):
             batch = batch.to(device)
 
         out = fn(batch)
-        outputs.append(out)
+        outputs.append(out.detach())
 
     return torch.cat(outputs, dim=0).to(device=device)
 
 import torch
 import math
 
-
+def rmse_loss(y_true, y_pred):
+    mse = torch.mean(torch.square(y_true - y_pred))
+    return torch.sqrt(mse)
 
 def nll_logvar(y, gaussian_preds, moG=1):
-    means = gaussian_preds[..., 0]
-    log_vars = gaussian_preds[..., 1] + 1e-6
+    means = gaussian_preds[:, :, :, 0]
+    log_vars = gaussian_preds[:, :, :, 1] + 1e-6
 
     if moG == 1:
         # Single Gaussian case
-        means = means[:, 0, :]
-        log_vars = log_vars[:, 0, :]
+        means = means[:, :, 0]
+        log_vars = log_vars[:, :, 0]
 
         diff = ((y - means) ** 2) / torch.exp(log_vars) \
                + torch.log(torch.tensor(2.0 * math.pi, device=y.device)) \
@@ -64,7 +67,7 @@ def nll_logvar(y, gaussian_preds, moG=1):
 
 
 def accuracy_classification(x, y, model, device="cpu", batch_size=128):
-    model.train()
+    model.eval()
     dataset = TensorDataset(x, y)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     correct = 0
