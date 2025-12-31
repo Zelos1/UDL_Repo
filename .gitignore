@@ -1,0 +1,6 @@
+results/
+data/
+__pycache__/
+model_artifacts/
+*.svg
+*.npy
