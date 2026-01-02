@@ -4,6 +4,7 @@ import numpy as np
 import torch.nn.functional as F
 from ucimlrepo import fetch_ucirepo
 from sklearn.model_selection import train_test_split
+import pandas as pd
 
 
 def load_mnist(val_size=100, init_size=20):
@@ -35,6 +36,7 @@ def load_mnist(val_size=100, init_size=20):
     x_val_indices   = np.zeros(val_size, dtype=int)
 
     for i in range(num_classes):
+        print(torch.where(y_train == i))
         idx = torch.where(y_train == i)[0].numpy()
         selected = np.random.choice(idx, size=12, replace=False)
 
@@ -58,11 +60,15 @@ def load_mnist(val_size=100, init_size=20):
     return x_train_new, y_train_new, X_p, y_p, x_val, y_val, x_test, y_test_1h
 
 def load_uci(val_size=100, init_size=20):
-    air_quality = fetch_ucirepo(id=242)
+    air_quality = fetch_ucirepo(id=360)
+    target_cols = ["CO(GT)", "NO2(GT)", "PT08.S5(O3)"]
+    df = air_quality.data.features
+    df.replace(-200, np.nan, inplace=True)
+    df = df.dropna(subset=target_cols)
   
     # data (as pandas dataframes) 
-    X = air_quality.data.features.to_numpy()
-    y = air_quality.data.targets.to_numpy()
+    y = df[target_cols].to_numpy()
+    X = df.drop(columns=target_cols + ["Date", "Time"], errors="ignore").to_numpy()
     X = torch.tensor(X, dtype=torch.float32)
     y = torch.tensor(y, dtype=torch.long)
 
@@ -95,3 +101,5 @@ def load_uci(val_size=100, init_size=20):
     X_p = x_train[remaining]
     y_p = y_train[remaining]
     return x_train_new, y_train_new, X_p, y_p, x_val, y_val, x_test, y_test
+
+load_mnist()
