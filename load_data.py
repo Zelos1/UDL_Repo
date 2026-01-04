@@ -36,7 +36,6 @@ def load_mnist(val_size=100, init_size=20):
     x_val_indices   = np.zeros(val_size, dtype=int)
 
     for i in range(num_classes):
-        print(torch.where(y_train == i))
         idx = torch.where(y_train == i)[0].numpy()
         selected = np.random.choice(idx, size=12, replace=False)
 
@@ -101,5 +100,3 @@ def load_uci(val_size=100, init_size=20):
     X_p = x_train[remaining]
     y_p = y_train[remaining]
     return x_train_new, y_train_new, X_p, y_p, x_val, y_val, x_test, y_test
-
-load_mnist()
