@@ -49,21 +49,13 @@ def nll_logvar(y, gaussian_preds, moG=1):
         d = torch.tensor(d, dtype=torch.float32, device=y.device)
 
         # Expand y to match mixture dimension
-        y = y.unsqueeze(1)
-
+        y = y.unsqueeze(2)
         sq = (y - means) ** 2
-
-        log_gauss = -0.5 * (
-            torch.sum(sq / torch.exp(log_vars), dim=2) +
-            torch.sum(log_vars, dim=2) +
-            d * torch.log(torch.tensor(2.0 * math.pi, device=y.device))
-        )
-
-        K = means.shape[1]
-        K = torch.tensor(K, dtype=torch.float32, device=y.device)
-
-        log_prob = torch.logsumexp(log_gauss, dim=1) - torch.log(K)
-        return log_prob
+        vars = torch.exp(log_vars)
+        exprs = 1 / torch.sqrt(vars) * (torch.exp((-0.5) * sq / vars))
+        log_gauss = torch.log(torch.sum(exprs, dim=-1))
+        #K = torch.tensor(- y.shape[0] * y.shape[1] * 0.5 * math.log(2)) irrelevant for optimization
+        return -log_gauss.sum()
 
 
 def accuracy_classification(x, y, model, device="cpu", batch_size=128):

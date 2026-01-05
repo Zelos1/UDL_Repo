@@ -60,12 +60,12 @@ def load_mnist(val_size=100, init_size=20):
 
 def load_uci(val_size=100, init_size=20):
     air_quality = fetch_ucirepo(id=360)
-    target_cols = ["CO(GT)", "NO2(GT)", "PT08.S5(O3)"]
+    # target_cols = ["CO(GT)", "NO2(GT)", "PT08.S5(O3)"]
+    target_cols = ["CO(GT)", "PT08.S5(O3)"]
     df = air_quality.data.features
     df.replace(-200, np.nan, inplace=True)
     df = df.dropna(subset=target_cols)
   
-    # data (as pandas dataframes) 
     y = df[target_cols].to_numpy()
     X = df.drop(columns=target_cols + ["Date", "Time"], errors="ignore").to_numpy()
     X = torch.tensor(X, dtype=torch.float32)
