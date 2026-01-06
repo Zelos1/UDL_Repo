@@ -6,3 +6,4 @@ model_artifacts/
 *.npy
 vi_results/
 cnn_mod.pt
+.DS_STORE

@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from ucimlrepo import fetch_ucirepo
 from sklearn.model_selection import train_test_split
 import pandas as pd
+from sklearn.datasets import make_regression
 
 
 def load_mnist(val_size=100, init_size=20):
@@ -68,6 +69,82 @@ def load_uci(val_size=100, init_size=20):
   
     y = df[target_cols].to_numpy()
     X = df.drop(columns=target_cols + ["Date", "Time"], errors="ignore").to_numpy()
+    X = torch.tensor(X, dtype=torch.float32)
+    y = torch.tensor(y, dtype=torch.long)
+
+    x_train, x_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    y_train = y_train
+    y_test  = y_test
+
+    x_train_indices = np.zeros(init_size, dtype=int)
+    x_val_indices   = np.zeros(val_size, dtype=int)
+
+    selected = np.random.choice(range(len(y_train)), size=val_size + init_size, replace=False)
+
+    x_train_indices = selected[:init_size]
+    x_val_indices = selected[init_size:]
+
+    x_train_new = x_train[x_train_indices]
+    y_train_new = y_train[x_train_indices]
+
+    x_val = x_train[x_val_indices]
+    y_val = y_train[x_val_indices]
+
+    remaining = np.setdiff1d(
+        np.arange(len(x_train)),
+        np.concatenate((x_train_indices, x_val_indices))
+    )
+
+    X_p = x_train[remaining]
+    y_p = y_train[remaining]
+    return x_train_new, y_train_new, X_p, y_p, x_val, y_val, x_test, y_test
+
+def load_uci_energy_perturbed(val_size=100, init_size=20):
+    air_quality = fetch_ucirepo(id=242)
+    X = air_quality.data.features.to_numpy()
+    y = air_quality.data.targets.to_numpy()
+    y[0,:] = y[0,:] + np.random.normal(0, 5, size=y.shape[-1])
+    print(y.min(axis=0))
+    print(y.max(axis=0))
+    X = torch.tensor(X, dtype=torch.float32)
+    y = torch.tensor(y, dtype=torch.long)
+
+    x_train, x_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    y_train = y_train
+    y_test  = y_test
+
+    x_train_indices = np.zeros(init_size, dtype=int)
+    x_val_indices   = np.zeros(val_size, dtype=int)
+
+    selected = np.random.choice(range(len(y_train)), size=val_size + init_size, replace=False)
+
+    x_train_indices = selected[:init_size]
+    x_val_indices = selected[init_size:]
+
+    x_train_new = x_train[x_train_indices]
+    y_train_new = y_train[x_train_indices]
+
+    x_val = x_train[x_val_indices]
+    y_val = y_train[x_val_indices]
+
+    remaining = np.setdiff1d(
+        np.arange(len(x_train)),
+        np.concatenate((x_train_indices, x_val_indices))
+    )
+
+    X_p = x_train[remaining]
+    y_p = y_train[remaining]
+    return x_train_new, y_train_new, X_p, y_p, x_val, y_val, x_test, y_test
+
+def sklearn_regression_data(val_size=100, init_size=20):
+    X, y = make_regression(n_samples=20000, n_features=10, n_targets=2, noise=1)
+    y[0,:] = y[0,:] + np.random.normal(0, 2, size=y.shape[-1])
     X = torch.tensor(X, dtype=torch.float32)
     y = torch.tensor(y, dtype=torch.long)
 
