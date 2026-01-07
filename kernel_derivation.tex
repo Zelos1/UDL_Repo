@@ -1,0 +1,89 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,mathtools,bm}
+\usepackage{physics}
+\usepackage{bm}
+\usepackage{amsthm}
+\newcommand{\K}{\mathbf{K}}
+\newcommand{\kXx}{\mathbf{k}(X,x_\ast)}
+\newcommand{\kxX}{\mathbf{k}(x_\ast,X)}
+\newcommand{\kx}{k(x_\ast,x_\ast)}
+\newcommand{\PhiMat}{\mathbf{\Phi}}
+\newcommand{\y}{\mathbf{Y}}
+\newcommand{\s}{s}
+\newcommand{\sig}{\sigma}
+
+\begin{document}
+	In a similar setting where the last layer is linear that gets input $phi(x)$ we can write the predictive distribution in terms of a kernel. For a derivation, see \ref{kernel} . This kernel gives us how far away a point in the pool is from the dataset. Hence, points where the kernel function is low will have higher epistemic uncertainty. 
+	
+	Therefore, we try to learn the deep kernel that best describes the predictive distribution. Hence,  goal is to minimize the KL divergence $\text{KL}(p(y^\ast | x^\ast, X, Y) || q_\Theta(y^\ast | x^\ast))$ w.r.t. $\Theta$ where $q$ is the model containing $\phi$ and the kernel $k$.
+	
+	The kernel distribution that is learned is 
+	\[\mathcal{N}( \sig^{-2}\y^{T}\big(\sig^{-2}\K+\s^{-2}I\big)^{-1}\kXx, \s^{2}k(x_\ast,x_\ast)
+	- \s^{2}k(x_\ast,X)\big(\sig^{2}\s^{-2}I+\K\big)^{-1}k(X,x_\ast))
+	\]
+	
+	
+	\section*{Derivation: weight-space posterior to kernel-space predictive}\label{kernel}
+	We have the predictive distribution for \(y_\ast\) at \(x_\ast\) in terms of posterior covariance $\Sigma'$, posterior mean $\mu'$ as
+	\[
+	p(y_\ast\mid x_\ast,X,Y)
+	=\mathcal N\!\big(y_\ast;\;{\mu'}^{T}\phi(x_\ast),\;\sig^{2}+\phi(x_\ast)^{T}\Sigma'\phi(x_\ast)\big).
+	\]
+	
+	To write this in terms of a kernel $k$, write
+	\begin{equation}
+	{\mu'}^{T}\phi(x_\ast)
+	= \big(\sig^{-2}\Sigma'\PhiMat^{T}\y\big)^{T}\phi(x_\ast)
+	= \sig^{-2}\y^{T}\big(\Sigma'\PhiMat^{T}\big)\phi(x_\ast).
+	\label{eq:mean-start}
+	\end{equation}
+	
+	Then apply the Woodbury identity to get
+	\begin{equation}
+		\Sigma'\PhiMat^{T}
+		=\big(\s^{-2}I+\sig^{-2}\PhiMat^{T}\PhiMat\big)^{-1}\PhiMat^{T}
+		= \s^{2}\PhiMat^{T}\big(\sig^{2}I+\s^{2}\K\big)^{-1}.
+		\label{eq:woodbury-applied}
+	\end{equation}
+	
+	Substituting \eqref{eq:woodbury-applied} into \eqref{eq:mean-start} and using \(\kXx=\PhiMat\phi(x_\ast)\) yields
+	\[
+	{\mu'}^{T}\phi(x_\ast)
+	= \sig^{-2}\y^{T}\big[\s^{2}\PhiMat^{T}(\sig^{2}I+\s^{2}\K)^{-1}\big]\phi(x_\ast)
+	= \sig^{-2}\s^{2}\y^{T}(\sig^{2}I+\s^{2}\K)^{-1}\kXx.
+	\]
+	So we obtain the kernel-space predictive mean
+	\[ \;
+		{\mu'}^{T}\phi(x_\ast)
+		= \sig^{-2}\y^{T}\big(\sig^{-2}\K+\s^{-2}I\big)^{-1}\kXx \; 
+	\]
+For the predictive variance start from
+	\[
+	\phi(x_\ast)^{T}\Sigma'\phi(x_\ast).
+	\]
+	Using the Woodbury-derived expansion for \(\Sigma'\) (one convenient form obtained from standard Woodbury algebra) is
+	\[
+	\Sigma' = \s^{2}I - \s^{4}\PhiMat^{T}\big(\sig^{2}I+\s^{2}\K\big)^{-1}\PhiMat.
+	\]
+	Hence
+	\begin{align*}
+		\phi(x_\ast)^{T}\Sigma'\phi(x_\ast)
+		&= \s^{2}\phi(x_\ast)^{T}\phi(x_\ast)
+		- \s^{4}\phi(x_\ast)^{T}\PhiMat^{T}\big(\sig^{2}I+\s^{2}\K\big)^{-1}\PhiMat\phi(x_\ast)\\
+		&= \s^{2}\kx
+		- \s^{4}\kxX\big(\sig^{2}I+\s^{2}\K\big)^{-1}\kXx,
+	\end{align*}
+	where \(\kxX=\kxX^\top=\kxX^\top\) is just \(\mathbf{k}(x_\ast,X)=\kXx^{T}\).  Pulling out an overall factor \(s^{2}\) and rescaling the inverse gives the kernel-form
+	\[\;
+		\phi(x_\ast)^{T}\Sigma'\phi(x_\ast)
+		= \s^{2}k(x_\ast,x_\ast)
+		- \s^{2}k(x_\ast,X)\big(\sig^{2}\s^{-2}I+\K\big)^{-1}k(X,x_\ast)\; .
+	\]
+	
+	Further, find the derivation of the negative log-likelihood below.
+	
+	When training the model, one tries to get as close to the predictive distribution. Therefore, the goal is to minimize the KL divergence $\text{KL}(p(y^\ast | x^\ast, X, Y) || q_\Theta(y^\ast | x^\ast))$ w.r.t. $\Theta$. Writing out 
+	\[\text{KL}(p(y^\ast | x^\ast, X, Y) || q_\Theta(y^\ast | x^\ast)) = \int p(y^\ast | x^\ast, X, Y) (\log p(y^\ast | x^\ast, X, Y) - \log q_\Theta(y^\ast | x^\ast))dy^\ast.\]
+	W.r.t. $\Theta$,  $\int p(y^\ast | x^\ast, X, Y) \log p(y^\ast | x^\ast, X, Y)dy^\ast$ is constant. Therefore, it is enough to minimize $\text{NLL}=- \int p(y^\ast | x^\ast, X, Y) \log q_\Theta(y^\ast | x^\ast)dy^\ast$. For a given train set $D$ this means minimizing the negative log likelihood $-\sum\limits_{x,y\in D}\log(q_\Theta(y|x))$ for $\Theta$ as the real distribution is still independent of $\Theta$.
+	
+\end{document}
